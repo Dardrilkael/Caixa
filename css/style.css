@@ -1,0 +1,79 @@
+/* ==========================================================================
+   PCB Layout Demo – stylesheet
+   Dark theme; all colors are exposed as CSS custom properties below.
+   ========================================================================== */
+
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#0f1216;
+  --fg:#e6edf3;
+  --mut:#8b949e;
+  --card:#11161c;
+  --line:#232b34;
+  --board:#0b3d21;
+  --boardline:#3aa76d;
+  --mcu:#5b8cf0;
+  --can:#e89a47;
+  --buck:#e5605b;
+  --ldo:#a782e0;
+  --conn:#8793a5;
+  --disp:#e8ebf0;
+  --key:#4dd0c4;
+}
+
+html,body{
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
+  font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+
+main{max-width:1000px;margin:0 auto;padding:24px 16px 28px}
+h1{font-size:1.3rem;font-weight:600;margin:0 0 4px}
+p.sub{margin:0 0 16px;color:var(--mut);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+
+/* --- layer toggles --- */
+.toggles{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 12px}
+label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.92rem;color:var(--fg)}
+
+svg{width:100%;height:auto;display:block;user-select:none;-webkit-user-select:none}
+
+/* --- info panel --- */
+#info{
+  min-height:2.6em;margin-top:10px;padding:8px 10px;border-radius:8px;
+  background:var(--bg);border:1px solid var(--line);font-size:.9rem;color:var(--mut);
+}
+#info b{color:var(--fg)}
+#info button{
+  font:inherit;font-size:.82rem;background:#1a222b;color:var(--fg);
+  border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer;
+}
+#info button:hover{background:#24303b}
+.rot-bar{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+
+/* --- stats row --- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px}
+.stat{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.stat b{display:block;font-size:1.15rem;color:var(--fg)}
+.stat span{color:var(--mut);font-size:.8rem}
+
+/* --- legend --- */
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:.82rem;color:var(--mut)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* --- movable pieces --- */
+.part-move{cursor:grab;touch-action:none}
+.part-move:active{cursor:grabbing}
+.part{cursor:grab}
+.part:hover rect{stroke-width:.8}
+
+text{font-family:inherit;pointer-events:none}
+.svg-text{font-weight:600;paint-order:stroke;stroke:#000;stroke-width:.8px;stroke-linejoin:round}
+
+/* --- toggle-based visibility (classes set on <svg>) --- */
+.hide-labels .part-label{display:none}
+.hide-keepout .keepout{display:none}
+.hide-dims .dims{display:none}

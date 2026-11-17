@@ -1,0 +1,9 @@
+# dependencies (only needed for the optional `npm start` dev server)
+node_modules/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PCB Layout Demo – 110 × 90 mm (draggable & rotatable)</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main>
+  <h1>PCB layout demo – 110 × 90 mm</h1>
+  <p class="sub">Top view, drawn to scale (1 mm = 1 unit). Drag any part to move it, double-click (or use the buttons) to rotate in 45° steps. The 4×3 keypad (69 × 77 mm) is shown to scale beside the board.</p>
+
+  <div class="card">
+    <div class="toggles">
+      <label><input type="checkbox" id="tDisp" checked> TFT display (floating)</label>
+      <label><input type="checkbox" id="tKey" checked> 4×3 keypad (69 × 77 mm)</label>
+      <label><input type="checkbox" id="tNoise" checked> Buck noise keep-out</label>
+      <label><input type="checkbox" id="tLbl" checked> Labels</label>
+      <label><input type="checkbox" id="tDim" checked> Dimensions</label>
+    </div>
+
+    <svg id="svg" viewBox="-10 -10 220 115" role="img" aria-label="Board layout and keypad"></svg>
+
+    <div id="info">Hover or tap a part. Drag to move · Double-click to rotate 45°.</div>
+
+    <div class="legend">
+      <span><i style="background:var(--mcu)"></i>MCU / wireless</span>
+      <span><i style="background:var(--can)"></i>CAN path</span>
+      <span><i style="background:var(--buck)"></i>MP1584EN 12→5 V</span>
+      <span><i style="background:var(--ldo)"></i>AS1117 5→3V3 (vertical)</span>
+      <span><i style="background:var(--conn)"></i>Connectors</span>
+      <span><i style="background:var(--key)"></i>4×3 keypad (panel)</span>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+</main>
+
+<!--
+  Classic scripts (no build step) – load order matters: each file extends
+  the shared `PCB` namespace, so dependencies must come first.
+-->
+<script src="js/config.js"></script>
+<script src="js/parts.js"></script>
+<script src="js/svg.js"></script>
+<script src="js/interact.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/render-parts.js"></script>
+<script src="js/render-extras.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

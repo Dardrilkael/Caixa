@@ -1,0 +1,11 @@
+{
+  "name": "pcb23",
+  "version": "1.0.0",
+  "description": "Interactive, to-scale PCB layout demo (110 × 90 mm) with draggable & rotatable parts, drawn in vanilla SVG. No dependencies, no build step.",
+  "private": true,
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": ["pcb", "svg", "layout", "demo", "interactive"],
+  "license": "UNLICENSED"
+}
