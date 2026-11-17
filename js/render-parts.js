@@ -1,10 +1,12 @@
 /**
  * render-parts.js – drawing routines for the parts on the bare PCB.
  *
- * Each part gets its own movable wrapper group; the keep-out of a buck
- * converter lives inside that wrapper so it moves & rotates with the part.
+ * Every part is drawn inside its own movable wrapper group and can be
+ * re-drawn in place (needed when the user edits its size). Drawing
+ * routines are organised in a type registry, so new part types can be
+ * added from code via PCB.registerType(key, def) / PCB.addPart(spec).
  *
- * Exposes: renderParts().
+ * Exposes: renderParts(), renderPart(p), redrawPart(p), registerType(key, def).
  */
 (function () {
 
@@ -134,38 +136,94 @@
     txt.textContent = "Connectors";
   }
 
-  /** Pick the right drawing routine for a part. */
-  function drawBody(p, g, gMove) {
-    if (p.n.indexOf("RP2350B") >= 0)            drawRP2350(p, g, gMove);
-    else if (p.n.indexOf("ESP32") >= 0)         drawESP32(p, g, gMove);
-    else if (p.buck)                            drawBuck(p, g, gMove);
-    else if (p.ldo)                             drawLDO(p, g);
-    else if (p.n.indexOf("CAN surge filter") >= 0) drawCanFilter(p, g, gMove);
-    else if (p.n.indexOf("ISOCANFD") >= 0)      drawIsoCanFd(p, g, gMove);
-    else if (p.n.indexOf("Connectors") >= 0)    drawConnectors(p, g, gMove);
+  /* -- Plain labelled box (fallback for parts without a drawing routine) ---- */
+  function drawPlainBox(p, g, gMove) {
+    PCB.el("rect", { x: p.x, y: p.y, width: p.w, height: p.h, rx: 1,
+      fill: "#1a1a1a", stroke: p.color || "#3a4a56", "stroke-width": 0.4 }, g);
+    const txt = PCB.el("text", { x: p.x + p.w / 2, y: p.y + p.h / 2 + 1.5, "font-size": 2.8,
+      fill: "#fff", "text-anchor": "middle", class: "svg-text part-label" }, gMove);
+    txt.textContent = p.lbl || p.n;
   }
+
+  // =====================================================================
+  //  TYPE REGISTRY
+  // =====================================================================
+  PCB.TYPES = {};
+
+  /**
+   * Register a reusable part type.
+   * def fields:
+   *   draw(p, g, gMove) – drawing routine (all coordinates from p.x/p.y/p.w/p.h)
+   *   keepout           – true: draw a dashed noise keep-out around the part
+   */
+  PCB.registerType = function (key, def) {
+    PCB.TYPES[key] = def;
+  };
+
+  // Built-in types (matching by key; the catalogue uses name/flag detection).
+  PCB.registerType("rp2350",     { draw: drawRP2350 });
+  PCB.registerType("esp32",      { draw: drawESP32 });
+  PCB.registerType("buck",       { draw: drawBuck, keepout: true });
+  PCB.registerType("ldo",        { draw: drawLDO });
+  PCB.registerType("canfilter",  { draw: drawCanFilter });
+  PCB.registerType("isocanfd",   { draw: drawIsoCanFd });
+  PCB.registerType("connectors", { draw: drawConnectors });
+
+  /** Fallback type detection for catalogue parts without an explicit `type`. */
+  function detectType(p) {
+    if (p.buck)                                return PCB.TYPES.buck;
+    if (p.ldo)                                 return PCB.TYPES.ldo;
+    if (p.n.indexOf("RP2350B") >= 0)           return PCB.TYPES.rp2350;
+    if (p.n.indexOf("ESP32") >= 0)             return PCB.TYPES.esp32;
+    if (p.n.indexOf("CAN surge filter") >= 0)  return PCB.TYPES.canfilter;
+    if (p.n.indexOf("ISOCANFD") >= 0)          return PCB.TYPES.isocanfd;
+    if (p.n.indexOf("Connectors") >= 0)        return PCB.TYPES.connectors;
+    return null;
+  }
+
+  /** Draw a part (keep-out + body) into its wrapper group. */
+  function drawPartInto(p, gMove) {
+    const t = p.type ? PCB.TYPES[p.type] : detectType(p);
+
+    // Noise keep-out (moves & rotates with the part).
+    if (t && t.keepout) {
+      PCB.el("rect", {
+        x: p.x - 5, y: p.y - 5, width: p.w + 10, height: p.h + 10, rx: 3,
+        fill: "var(--buck)", "fill-opacity": 0.13, stroke: "var(--buck)",
+        "stroke-width": 0.3, "stroke-dasharray": "1.4 1", class: "keepout"
+      }, gMove);
+    }
+
+    const g = PCB.el("g", { class: "part" }, gMove);
+    if (t && t.draw) t.draw(p, g, gMove);
+    else drawPlainBox(p, g, gMove);
+  }
+
+  /** Draw one part into a fresh movable wrapper on the parts layer. */
+  PCB.renderPart = function (p) {
+    const gMove = PCB.el("g", { class: "part-move" }, PCB.layers.parts);
+    p._gMove = gMove;
+    p._drawInto = function () { drawPartInto(p, gMove); };
+    p._drawInto();
+
+    PCB.makeDraggable(gMove, p);
+    gMove.addEventListener("mouseenter", function () { PCB.show(p); });
+    gMove.addEventListener("click",      function () { PCB.show(p); });
+    return gMove;
+  };
+
+  /** Re-draw an existing part in place (after a size edit). */
+  PCB.redrawPart = function (p) {
+    const gMove = p._gMove;
+    if (!gMove || !p._drawInto) return;
+    while (gMove.firstChild) gMove.removeChild(gMove.firstChild);
+    p._drawInto();
+    if (p._apply) p._apply();
+  };
 
   /** Render every part, then the fixed LDO group annotation. */
   PCB.renderParts = function () {
-    PCB.PARTS.forEach(function (p) {
-      const gMove = PCB.el("g", { class: "part-move" }, PCB.layers.parts);
-
-      // Buck noise keep-out (moves & rotates with the buck).
-      if (p.buck) {
-        PCB.el("rect", {
-          x: p.x - 5, y: p.y - 5, width: p.w + 10, height: p.h + 10, rx: 3,
-          fill: "var(--buck)", "fill-opacity": 0.13, stroke: "var(--buck)",
-          "stroke-width": 0.3, "stroke-dasharray": "1.4 1", class: "keepout"
-        }, gMove);
-      }
-
-      const g = PCB.el("g", { class: "part" }, gMove);
-      drawBody(p, g, gMove);
-
-      PCB.makeDraggable(gMove, p);
-      gMove.addEventListener("mouseenter", function () { PCB.show(p); });
-      gMove.addEventListener("click",      function () { PCB.show(p); });
-    });
+    PCB.PARTS.forEach(PCB.renderPart);
 
     const ldoLabel = PCB.el("text", {
       x: 72.5, y: 45.5, "font-size": 2.5, fill: "#fff",

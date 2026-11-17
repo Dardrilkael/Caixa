@@ -8,9 +8,11 @@
  *   d       – description shown in the info panel
  *   buck    – flag: MP1584EN buck converter (gets a noise keep-out)
  *   ldo     – flag: vertical AS1117 LDO on a pin bar
+ *   type    – key of a registered drawing type (see render-parts.js);
+ *             omit for name/flag-based detection or a plain box
  *
- * Transform state (tx, ty, rot) is added below so every piece is
- * movable / rotatable from the start.
+ * normalizePart() adds the transform state (tx, ty, rot) and snapshots the
+ * default size (defW, defH) which ↺ Reset restores after custom sizing.
  */
 (function () {
 
@@ -41,8 +43,20 @@
     });
   }
 
-  // Movable / rotatable state on every piece.
-  PCB.PARTS.forEach(function (p) { p.tx = 0; p.ty = 0; p.rot = 0; });
+  /**
+   * Normalise a part: snapshot the default size (kept untouched so ↺ Reset
+   * can restore it) and initialise the movable / rotatable state.
+   */
+  PCB.normalizePart = function (p) {
+    if (p.defW === undefined) p.defW = p.w;
+    if (p.defH === undefined) p.defH = p.h;
+    if (p.tx === undefined) p.tx = 0;
+    if (p.ty === undefined) p.ty = 0;
+    if (p.rot === undefined) p.rot = 0;
+    return p;
+  };
+
+  PCB.PARTS.forEach(PCB.normalizePart);
 
   /** The floating TFT display (not part of the PCB itself). */
   PCB.TFT_PART = Object.assign({}, PCB.TFT, {
@@ -50,6 +64,7 @@
     d: "81.8 × 50 mm TFT panel, floats above the board.",
     tx: 0, ty: 0, rot: 0
   });
+  PCB.normalizePart(PCB.TFT_PART);
 
   /** The 4×3 matrix keypad, mounted off-board on the front panel. */
   PCB.KEYPAD_PART = Object.assign({}, PCB.KEYPAD, {
@@ -59,4 +74,5 @@
        "it does not fit on the 110 × 90 mm PCB.",
     tx: 0, ty: 0, rot: 0
   });
+  PCB.normalizePart(PCB.KEYPAD_PART);
 })();

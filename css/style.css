@@ -54,6 +54,17 @@ svg{width:100%;height:auto;display:block;user-select:none;-webkit-user-select:no
 #info button:hover{background:#24303b}
 .rot-bar{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
 
+/* --- part editor (name, description, custom size) --- */
+.edit-bar{margin-top:6px;display:flex;gap:6px 10px;flex-wrap:wrap;align-items:center}
+.edit-bar label{cursor:default;font-size:.8rem;color:var(--mut);gap:4px}
+.edit-bar input{
+  font:inherit;font-size:.82rem;background:#1a222b;color:var(--fg);
+  border:1px solid var(--line);border-radius:6px;padding:3px 6px;
+}
+.edit-bar input[type=number]{width:4.5em}
+.edit-bar input:focus{outline:1px solid var(--boardline);outline-offset:-1px}
+.edit-bar .unit{font-size:.8rem;color:var(--mut)}
+
 /* --- stats row --- */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px}
 .stat{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}

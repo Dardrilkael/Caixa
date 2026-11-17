@@ -3,9 +3,11 @@
  *
  * Each part is drawn inside a movable wrapper <g>. Its transform state
  * (tx, ty offset in mm and rot in degrees) lives on the part data object,
- * so `ui.js` can report it in the info panel.
+ * so `ui.js` can report it in the info panel. The rotation centre also
+ * lives on the part (p._cx / p._cy) so resizePart() can move it.
  *
- * Exposes: makeDraggable(g, p), rotatePart(p, delta), resetPart(p).
+ * Exposes: makeDraggable(g, p), rotatePart(p, delta), resetPart(p),
+ *          resizePart(p, w, h).
  */
 (function () {
 
@@ -21,16 +23,17 @@
 
   /** Make a wrapper group draggable (pointer events) and rotatable (double-click). */
   PCB.makeDraggable = function (g, p) {
-    const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
     let dragging = false, startX = 0, startY = 0, startTx = 0, startTy = 0;
+
+    // Rotation centre lives on the part so resizePart() can move it.
+    p._cx = p.x + p.w / 2;
+    p._cy = p.y + p.h / 2;
 
     function apply() {
       g.setAttribute("transform",
-        "translate(" + p.tx + "," + p.ty + ") rotate(" + p.rot + "," + cx + "," + cy + ")");
+        "translate(" + p.tx + "," + p.ty + ") rotate(" + p.rot + "," + p._cx + "," + p._cy + ")");
     }
     p._apply = apply;
-    p._cx = cx;
-    p._cy = cy;
     apply();
 
     g.addEventListener("pointerdown", function (e) {
@@ -75,9 +78,28 @@
     PCB.show(p);
   };
 
-  /** Move a part back to its original position and angle. */
+  /** Change a part's footprint (mm): redraws it in place, refreshes stats. */
+  PCB.resizePart = function (p, w, h) {
+    p.w = w;
+    p.h = h;
+    p._cx = p.x + p.w / 2;
+    p._cy = p.y + p.h / 2;
+    PCB.redrawPart(p);
+    if (p._apply) p._apply();
+    PCB.buildStats();
+  };
+
+  /** Move a part back to its original position, angle and DEFAULT size. */
   PCB.resetPart = function (p) {
     p.tx = 0; p.ty = 0; p.rot = 0;
+    if (p.defW !== undefined && (p.w !== p.defW || p.h !== p.defH)) {
+      p.w = p.defW;
+      p.h = p.defH;
+      p._cx = p.x + p.w / 2;
+      p._cy = p.y + p.h / 2;
+      PCB.redrawPart(p);
+      PCB.buildStats();
+    }
     if (p._apply) p._apply();
     PCB.show(p);
   };
