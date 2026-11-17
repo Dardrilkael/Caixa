@@ -1,6 +1,9 @@
 # dependencies (only needed for the optional `npm start` dev server)
 node_modules/
 
+# generated single-file build (tools/build-single.py)
+pcb23.html
+
 # OS / editor noise
 .DS_Store
 Thumbs.db

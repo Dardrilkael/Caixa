@@ -45,6 +45,8 @@ pcb23/
 │   └── main.js           # bootstrap: render everything, wire up the UI
 ├── examples/
 │   └── custom-parts.js   # demo of the API (not loaded by default)
+├── tools/
+│   └── build-single.py   # optional: inline everything into one shareable HTML
 ├── package.json          # project metadata + optional `npm start` dev server
 ├── .gitignore
 └── .editorconfig
@@ -121,6 +123,24 @@ npm start          # uses npx serve (no install needed)
 ```
 
 Then visit the printed URL (e.g. http://localhost:3000).
+
+## Sharing: build one single HTML file
+
+The project splits into files for readability, but it has no build step and
+no dependencies – so "compiling" is just inlining the stylesheet and the
+scripts into one file:
+
+```bash
+python3 tools/build-single.py            # writes pcb23.html (gitignored)
+python3 tools/build-single.py mycopy.html
+```
+
+The result is one self-contained HTML file you can send by email, drop on a
+USB stick or host anywhere: it works from `file://`, needs no server and
+picks up every `<script src>` in `index.html` load order automatically.
+Regenerate it after editing the sources; commit only the sources. (To also
+bake the example parts into the share, add the
+`examples/custom-parts.js` script tag to `index.html` before building.)
 
 ## Customising
 
